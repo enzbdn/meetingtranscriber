@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Transcription</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: border 0.3s ease-in-out;
+        }
+        .drop-zone:hover {
+            border-color: #0d6efd;
+        }
+        .transcription-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .file-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+        }
+        .supported-formats {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+        .transcription-text {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-width: 100%;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        .loading-spinner {
+            display: none;
+            margin: 20px auto;
+        }
+        .loading-text {
+            text-align: center;
+            margin-top: 10px;
+            color: #0d6efd;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h1 class="text-center mb-4">Audio/Video Transcription</h1>
+                        
+                        <form method="POST" enctype="multipart/form-data" id="transcriptionForm">
+                            <div class="drop-zone" id="dropZone">
+                                <svg class="file-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 16L12 8" stroke="#0d6efd" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M9 11L12 8L15 11" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 16C4.68629 16 2 13.3137 2 10C2 6.68629 4.68629 4 8 4C10.7726 4 13.1078 5.80489 13.8299 8.33316C14.5436 8.11543 15.3036 8 16.0833 8C19.4556 8 22 10.5444 22 13.9167C22 17.2889 19.4556 19.8333 16.0833 19.8333C13.6428 19.8333 10.9928 19.8333 8.83333 19.8333" stroke="#0d6efd" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                                <h4>Drag and drop your file here</h4>
+                                <p class="text-muted">or</p>
+                                <input type="file" name="audio_file" class="form-control" id="fileInput" accept="audio/*,video/*">
+                                <p class="supported-formats">Supported formats: MP3, WAV, MP4, MOV, AVI, etc.</p>
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary btn-lg px-4">
+                                    <i class="bi bi-waveform me-2"></i>Transcribe
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="loading-spinner" id="loadingSpinner">
+                            <div class="d-flex flex-column align-items-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="loading-text">Transcribing your file... Please wait</div>
+                            </div>
+                        </div>
+
+                        {% if transcription %}
+                        <div class="transcription-box mt-4">
+                            <h2 class="h4 mb-3">Transcription Result:</h2>
+                            <div class="bg-white p-3 rounded transcription-text">{{ transcription }}</div>
+                            <button class="btn btn-outline-primary mt-3" onclick="copyTranscription()">
+                                Copy to Clipboard
+                            </button>
+                        </div>
+                        {% endif %}
+
+                        {% if error %}
+                        <div class="alert alert-danger mt-4" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            {{ error }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function copyTranscription() {
+            const transcription = document.querySelector('.transcription-text').innerText;
+            navigator.clipboard.writeText(transcription)
+                .then(() => alert('Transcription copied to clipboard!'))
+                .catch(err => console.error('Failed to copy: ', err));
+        }
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#0d6efd';
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ccc';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ccc';
+            const files = e.dataTransfer.files;
+            fileInput.files = files;
+        });
+
+        const transcriptionForm = document.getElementById('transcriptionForm');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        transcriptionForm.addEventListener('submit', (e) => {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length > 0) {
+                loadingSpinner.style.display = 'block';
+                // Disable the submit button to prevent double submission
+                transcriptionForm.querySelector('button[type="submit"]').disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>

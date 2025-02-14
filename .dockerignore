@@ -1,0 +1,12 @@
+temp/
+__pycache__/
+*.pyc
+.venv
+.git
+.gitignore
+README.md
+*.wav
+*.mp3
+*.mp4
+*.avi
+*.mov

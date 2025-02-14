@@ -1,0 +1,6 @@
+pyannote.audio
+pydub
+flask
+datasets
+python-dotenv
+requests
