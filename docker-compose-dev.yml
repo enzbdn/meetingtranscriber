@@ -1,0 +1,36 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=main.py
+      - FLASK_ENV=production
+      - DIARIZATION_MODEL=pyannote/speaker-diarization@2.1
+      - OLLAMA_API_URL=http://ollama:11434/api/generate
+      - WHISPER_API_URL=http://whisper:9001/asr
+      - OLLAMA_MODEL=llama3.1
+      - HF_TOKEN=
+    depends_on:
+      - ollama
+      - whisper
+
+  ollama:
+    container_name: ollama
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  whisper:
+    container_name: whisper
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    ports:
+      - 9001:9000
+    environment:
+      - ASR_MODEL=base
+      - ASR_ENGINE=faster_whisper
+
+volumes:
+  ollama_data:
